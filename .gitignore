@@ -1,24 +1,52 @@
-# Byte-compiled / optimized / DLL files
-*.pyc
+# Python cache files
 __pycache__/
-
-# Virtual environments
-lakbai_env/
-venv/
-env/
-
-# Django static and media files
-/staticfiles/
-media/
+*.py[cod]
 
 # Environment variables
 .env
 
-# macOS and Windows system files
+# Virtual environment
+venv/
+lakbai_env/
+
+# SQLite database
+*.sqlite3
+db.sqlite3
+
+# Logs
+*.log
+
+# IDE-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
 .DS_Store
 Thumbs.db
 
-# Logs and temporary files
-*.log
-*.tmp
+# Compiled files
+*.so
+
+# Static and media files
+/static/
+/media/
+
+# Test and coverage reports
+htmlcov/
+.tox/
+.nox/
+*.cover
+.coverage
+.cache
+.pytest_cache/
+pytestdebug.log
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Temporary files
 *.swp
+*.swo
+*.tmp
