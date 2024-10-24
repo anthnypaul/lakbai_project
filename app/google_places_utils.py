@@ -1,5 +1,3 @@
-# google_places_utils.py
-
 import googlemaps
 from decouple import config
 

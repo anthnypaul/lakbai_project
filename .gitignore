@@ -1,52 +1,21 @@
-# Python cache files
 __pycache__/
 *.py[cod]
-
-# Environment variables
-.env
-
-# Virtual environment
-venv/
 lakbai_env/
-
-# SQLite database
+.env
 *.sqlite3
 db.sqlite3
-
-# Logs
 *.log
-
-# IDE-specific files
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
-
-# OS-specific files
 .DS_Store
 Thumbs.db
-
-# Compiled files
-*.so
-
-# Static and media files
-/static/
-/media/
-
-# Test and coverage reports
 htmlcov/
-.tox/
-.nox/
-*.cover
+.pytest_cache/
 .coverage
 .cache
-.pytest_cache/
-pytestdebug.log
-
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
-# Temporary files
 *.swp
 *.swo
 *.tmp
+
+run_async_sql.py
+test.db
