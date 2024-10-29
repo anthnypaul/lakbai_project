@@ -9,17 +9,21 @@ def search_tourist_attractions(lat, lng, radius=2000):
     """
     Search for tourist attractions using Google Places API.
     """
+    if not isinstance(lat, (int, float)) or not isinstance(lng, (int, float)):
+        raise ValueError("Invalid latitude or longitude values.")
+
     try:
         response = gmaps.places_nearby(
             location=(lat, lng),
-            radius=radius,
+            radius=min(radius, 50000),  # Cap radius at 50,000 meters
             type="tourist_attraction"
         )
 
         if response.get('status') != 'OK':
+            print(f"Response status: {response.get('status')}")
             return []
 
-        attractions = [
+        return [
             {
                 "name": place.get("name"),
                 "location": place.get("vicinity"),
@@ -28,8 +32,6 @@ def search_tourist_attractions(lat, lng, radius=2000):
             }
             for place in response.get('results', [])
         ]
-
-        return attractions
 
     except Exception as e:
         print(f"Error searching for attractions: {e}")
@@ -40,9 +42,10 @@ def search_country_or_city(query):
     Search for a country or city using Google Places API.
     """
     try:
-        response = gmaps.places(query=query, type="(cities)")
+        response = gmaps.places(query=query)
 
         if response.get('status') != 'OK':
+            print(f"Response status: {response.get('status')}")
             return None
 
         place = response.get('results', [])[0]
