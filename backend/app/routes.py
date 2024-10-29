@@ -45,41 +45,49 @@ def generate_itinerary_endpoint(request: ItineraryRequest, db: Session = Depends
     """
     Generate a personalized itinerary based on user preferences.
     """
-    city, country = request.city, request.country
-    days = request.days
-    budget = request.budget
-    preferred_activities = request.preferred_activities
-
-    # Validate city and retrieve latitude and longitude
-    location_data = search_country_or_city(city)
+    location_data = search_country_or_city(request.city)
     if not location_data:
         raise HTTPException(status_code=404, detail="City not found")
 
     lat, lng = location_data['lat'], location_data['lng']
 
     # Retrieve attractions and restaurants based on location and preferences
-    attractions = search_tourist_attractions(lat, lng, preferred_activities)
-    restaurants = search_yelp(lat, lng, budget=budget)
+    attractions = search_tourist_attractions(lat, lng, request.preferred_activities)
+    restaurants = search_yelp(lat, lng, budget=request.budget)
 
-    if not (attractions or restaurants):
-        raise HTTPException(status_code=404, detail="No activities found")
+    # Retry with broader search radius if insufficient activities are found
+    if len(attractions) < request.days:
+        attractions = search_tourist_attractions(lat, lng, radius=10000)
+
+    # Add default attractions or reduce days if still insufficient
+    if len(attractions) < request.days:
+        default_attractions = [
+            {"name": "Central Park", "location": "New York, NY", "rating": 4.7, "place_id": "default_1"},
+            {"name": "Art Museum", "location": "New York, NY", "rating": 4.5, "place_id": "default_2"}
+        ]
+        attractions.extend(default_attractions[:request.days - len(attractions)])
+
+    if len(attractions) < request.days or len(restaurants) < request.days:
+        request.days = min(len(attractions), len(restaurants))
+        if request.days == 0:
+            raise HTTPException(status_code=404, detail="Not enough activities found to generate even a partial itinerary.")
 
     try:
         # Call OpenAI to generate the itinerary
         itinerary_text = generate_dynamic_itinerary(
-            city, country, days, budget, preferred_activities, attractions, restaurants
+            request.city, request.country, request.days, request.budget, request.preferred_activities, attractions, restaurants
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate itinerary: {e}")
 
     # Save the generated itinerary to the database
     new_itinerary = Itinerary(
-        city=city,
-        country=country,
+        city=request.city,
+        country=request.country,
         description=itinerary_text,
-        duration=days,
-        budget=budget,
-        preferences=", ".join(preferred_activities)
+        duration=request.days,
+        budget=request.budget,
+        preferences=", ".join(request.preferred_activities)
     )
     db.add(new_itinerary)
     db.commit()
@@ -101,4 +109,3 @@ def get_itineraries(db: Session = Depends(get_db)):
         itinerary.preferences = itinerary.preferences.split(", ")
 
     return itineraries
-
