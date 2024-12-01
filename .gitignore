@@ -1,21 +1,58 @@
+# Python
 __pycache__/
 *.py[cod]
 lakbai_env/
-.env
-*.sqlite3
-db.sqlite3
-*.log
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-htmlcov/
-.pytest_cache/
-.coverage
-.cache
 *.swp
 *.swo
 *.tmp
 
-run_async_sql.py
+# Environment variables
+.env
+.env.local
+
+# Database files
+*.sqlite3
+db.sqlite3
 test.db
+
+# Logs
+*.log
+
+# IDEs and Editors
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Python test and coverage
+htmlcov/
+.pytest_cache/
+.coverage
+.cache
+
+# Node.js
+node_modules/
+
+# Next.js
+.next/
+dist/
+out/
+
+# Frontend build artifacts
+public/
+build/
+coverage/
+
+# Lock files
+package-lock.json
+yarn.lock
+
+# Temp files and backup
+*.bak
+*.backup
+*.orig
+
+# Miscellaneous
+run_async_sql.py
