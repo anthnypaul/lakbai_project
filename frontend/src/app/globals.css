@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+ 
+@layer base {
+  :root {
+    --background: 0 0% 97%; /* #F7F7F7 */
+    --foreground: 0 0% 20%; /* #333333 */
+    
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 20%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 20%;
+    
+    --primary: 174 47% 51%; /* #4DB6AC */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 0 0% 88%; /* #E0E0E0 */
+    --secondary-foreground: 0 0% 20%;
+    
+    --muted: 0 0% 88%;
+    --muted-foreground: 0 0% 45%;
+    
+    --accent: 217 100% 58%; /* #2979FF */
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 88%; /* #E0E0E0 */
+    --input: 0 0% 88%;
+    --ring: 174 47% 51%;
+
+    --radius: 0.5rem;
+  }
+}
+ 
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-montserrat;
+  }
+}
+
+.btn-primary {
+  @apply bg-[#4DB6AC] text-white transition-all duration-200;
+}
+
+.btn-primary:hover {
+  @apply bg-[#2979FF];
+}
+
+.btn-outline {
+  @apply border-[#E0E0E0] text-[#333333];
+}
+
+.btn-outline:hover {
+  @apply border-[#4DB6AC] text-[#4DB6AC];
+}
+
+.btn-selected {
+  @apply bg-[#4DB6AC] text-white;
+}
+
+.SelectContent {
+  background-color: white !important;
+  border: 1px solid #E0E0E0;
+  border-radius: 6px;
+}
+
+[data-radix-popper-content-wrapper] {
+  background-color: white !important;
+}
+
+.SelectItem {
+  cursor: pointer;
+}
+
+.SelectItem:hover {
+  background-color: #F7F7F7;
+}
+
+div[role="listbox"] {
+  background-color: white !important;
+}
