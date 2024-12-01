@@ -1,7 +1,6 @@
 import googlemaps
 from decouple import config
 
-# Initialize Google Maps client
 GOOGLE_PLACES_API_KEY = config("GOOGLE_PLACES_API_KEY")
 gmaps = googlemaps.Client(key=GOOGLE_PLACES_API_KEY)
 
@@ -15,7 +14,7 @@ def search_tourist_attractions(lat, lng, radius=2000):
     try:
         response = gmaps.places_nearby(
             location=(lat, lng),
-            radius=min(radius, 50000),  # Cap radius at 50,000 meters
+            radius=min(radius, 50000), 
             type="tourist_attraction"
         )
 
