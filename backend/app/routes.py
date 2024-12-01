@@ -1,14 +1,19 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from .google_places_utils import search_country_or_city, search_tourist_attractions
 from .yelp_utils import search_yelp
 from .openai_utils import generate_dynamic_itinerary
 from .models import Itinerary
 from .database import SessionLocal
 from .schemas import ItinerarySchema, ItineraryRequest
-from typing import List
+from typing import List, Dict, Any
+from cachetools import cached, TTLCache
 
 router = APIRouter()
+
+cache_location = TTLCache(maxsize=100, ttl=3600)  
+cache_activities = TTLCache(maxsize=100, ttl=3600)  
 
 def get_db():
     db = SessionLocal()
@@ -17,95 +22,84 @@ def get_db():
     finally:
         db.close()
 
+@cached(cache_location)
+def get_cached_location(query: str):
+    return search_country_or_city(query)
+
+@cached(cache_activities)
+def get_cached_activities(lat: float, lng: float, budget: int):
+    attractions = search_tourist_attractions(lat, lng)
+    restaurants = search_yelp(lat, lng, budget=budget)
+    return attractions, restaurants
+
 @router.get("/search-destination/")
 def search_destination(query: str):
-    """
-    Search for a city or country using Google Places API.
-    """
-    place = search_country_or_city(query)
+    place = get_cached_location(query)
     if not place:
         raise HTTPException(status_code=404, detail="Destination not found")
     return {"destination": place}
 
 @router.get("/find-activities/")
 def find_activities(lat: float, lng: float):
-    """
-    Find activities and restaurants using both Google Places and Yelp Fusion APIs.
-    """
-    attractions = search_tourist_attractions(lat, lng)
-    restaurants = search_yelp(lat, lng, "restaurants")
-
+    attractions, restaurants = get_cached_activities(lat, lng, budget=None)
     if not (attractions or restaurants):
         raise HTTPException(status_code=404, detail="No activities found")
-
     return {"attractions": attractions, "restaurants": restaurants}
 
-@router.post("/generate-itinerary/")
+@router.post("/generate-itinerary/", response_model=Dict[str, Any])
 def generate_itinerary_endpoint(request: ItineraryRequest, db: Session = Depends(get_db)):
-    """
-    Generate a personalized itinerary based on user preferences.
-    """
-    location_data = search_country_or_city(request.city)
+    location_data = get_cached_location(request.city)
     if not location_data:
         raise HTTPException(status_code=404, detail="City not found")
 
     lat, lng = location_data['lat'], location_data['lng']
-
-    # Retrieve attractions and restaurants based on location and preferences
-    attractions = search_tourist_attractions(lat, lng, request.preferred_activities)
-    restaurants = search_yelp(lat, lng, budget=request.budget)
-
-    # Retry with broader search radius if insufficient activities are found
-    if len(attractions) < request.days:
-        attractions = search_tourist_attractions(lat, lng, radius=10000)
-
-    # Add default attractions or reduce days if still insufficient
-    if len(attractions) < request.days:
-        default_attractions = [
-            {"name": "Central Park", "location": "New York, NY", "rating": 4.7, "place_id": "default_1"},
-            {"name": "Art Museum", "location": "New York, NY", "rating": 4.5, "place_id": "default_2"}
-        ]
-        attractions.extend(default_attractions[:request.days - len(attractions)])
-
-    if len(attractions) < request.days or len(restaurants) < request.days:
-        request.days = min(len(attractions), len(restaurants))
-        if request.days == 0:
-            raise HTTPException(status_code=404, detail="Not enough activities found to generate even a partial itinerary.")
+    attractions, restaurants = get_cached_activities(lat, lng, budget=request.budget)
 
     try:
-        # Call OpenAI to generate the itinerary
-        itinerary_text = generate_dynamic_itinerary(
-            request.city, request.country, request.days, request.budget, request.preferred_activities, attractions, restaurants
+        itinerary_data = generate_dynamic_itinerary(
+            request.city,
+            request.country,
+            request.days,
+            request.budget,
+            request.preferred_activities,
+            attractions,
+            restaurants
         )
-    except Exception as e:
+    except RuntimeError as e:
         raise HTTPException(status_code=500, detail=f"Failed to generate itinerary: {e}")
 
-    # Save the generated itinerary to the database
+    if "days" not in itinerary_data:
+        raise HTTPException(status_code=500, detail="Generated itinerary format is invalid")
+
     new_itinerary = Itinerary(
         city=request.city,
         country=request.country,
-        description=itinerary_text,
+        description=itinerary_data,  
         duration=request.days,
         budget=request.budget,
         preferences=", ".join(request.preferred_activities)
     )
-    db.add(new_itinerary)
-    db.commit()
 
-    return {"itinerary": itinerary_text}
+    try:
+        db.add(new_itinerary)
+        db.commit()
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Database error when saving itinerary")
+
+    return itinerary_data
 
 @router.get("/itineraries", response_model=List[ItinerarySchema])
 def get_itineraries(db: Session = Depends(get_db)):
-    """
-    Retrieve all saved itineraries from the database.
-    """
-    itineraries = db.query(Itinerary).all()
+    try:
+        itineraries = db.query(Itinerary).all()
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Database error when retrieving itineraries")
 
     if not itineraries:
         raise HTTPException(status_code=404, detail="No itineraries found")
 
-    # Convert preferences from a comma-separated string to a list
     for itinerary in itineraries:
-        itinerary.preferences = itinerary.preferences.split(", ")
+        itinerary.preferences = itinerary.preferences.split(", ") if itinerary.preferences else []
 
     return itineraries
