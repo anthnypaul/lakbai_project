@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from typing import List, Dict, Any
 
 class ItineraryRequest(BaseModel):
     city: str = Field(..., description="The city for the itinerary")
@@ -15,6 +15,6 @@ class ItinerarySchema(BaseModel):
     duration: int
     budget: int
     preferences: List[str]  
-    description: str
+    description: Dict[str, Any]
 
     model_config = ConfigDict(from_attributes=True)
