@@ -32,20 +32,6 @@ def get_cached_activities(lat: float, lng: float, budget: int):
     restaurants = search_yelp(lat, lng, budget=budget)
     return attractions, restaurants
 
-@router.get("/search-destination/")
-def search_destination(query: str):
-    place = get_cached_location(query)
-    if not place:
-        raise HTTPException(status_code=404, detail="Destination not found")
-    return {"destination": place}
-
-@router.get("/find-activities/")
-def find_activities(lat: float, lng: float):
-    attractions, restaurants = get_cached_activities(lat, lng, budget=None)
-    if not (attractions or restaurants):
-        raise HTTPException(status_code=404, detail="No activities found")
-    return {"attractions": attractions, "restaurants": restaurants}
-
 @router.post("/generate-itinerary/", response_model=Dict[str, Any])
 def generate_itinerary_endpoint(request: ItineraryRequest, db: Session = Depends(get_db)):
     location_data = get_cached_location(request.city)
