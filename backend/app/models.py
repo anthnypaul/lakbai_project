@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSON
 from .database import Base
 
 class Itinerary(Base):
@@ -9,5 +10,5 @@ class Itinerary(Base):
     country = Column(String, nullable=False)
     duration = Column(Integer, nullable=False)
     budget = Column(Integer, nullable=False)
-    description = Column(Text, nullable=False)
+    description = Column(JSON, nullable=False)
     preferences = Column(Text, nullable=True)  
