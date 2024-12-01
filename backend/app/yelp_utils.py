@@ -9,7 +9,6 @@ def search_yelp(lat, lng, term="restaurants", radius=2000, budget=None):
         "Authorization": f"Bearer {YELP_API_KEY}"
     }
 
-    # Set Yelp price range based on budget
     price = ",".join(str(i) for i in range(1, budget + 1)) if budget else None
 
     params = {
