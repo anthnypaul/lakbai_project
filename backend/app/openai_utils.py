@@ -114,7 +114,7 @@ async def generate_dynamic_itinerary(city: str, country: str, days: int, budget:
 
     try:
         response = await client.chat.completions.create(
-            model="gpt-3.5-turbo-16k",  # Using larger context model
+            model="gpt-4-turbo",  # Using larger context model
             messages=[
                 {
                     "role": "system", 
@@ -149,8 +149,19 @@ async def generate_dynamic_itinerary(city: str, country: str, days: int, budget:
                 # Verify and fix format if needed
                 if not "(" in activity or not ")" in activity:
                     activity += f" ({city} Center)"
-                if not "(" in dining or not ")" in dining:
-                    dining += f" ({city} Center)"
+                if isinstance(dining, str):
+                    if not "(" in dining or not ")" in dining:
+                        dining += f" ({city} Center)"
+                    # Track for duplicates
+                    used_venues.add(dining.split("(")[0].strip().lower())
+                elif isinstance(dining, list):
+                    for dining_item in dining:
+                        if not "(" in dining_item or not ")" in dining_item:
+                            dining_item += f" ({city} Center)"
+                        # Track for duplicates
+                        used_venues.add(dining_item.split("(")[0].strip().lower())
+                    # Join the list back into a string if needed
+                    dining = ", ".join(dining)
 
                 # Update the data
                 slot_data["activity"] = activity
@@ -158,7 +169,6 @@ async def generate_dynamic_itinerary(city: str, country: str, days: int, budget:
 
                 # Track for duplicates
                 used_venues.add(activity.split("(")[0].strip().lower())
-                used_venues.add(dining.split("(")[0].strip().lower())
 
         return itinerary_data
 
