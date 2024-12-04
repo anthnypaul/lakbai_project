@@ -17,7 +17,7 @@ def get_db():
     finally:
         db.close()
 
-# Simple in-memory cache
+
 suggestions_cache = {}
 
 async def get_cached_suggestions(
@@ -41,14 +41,14 @@ async def generate_itinerary_endpoint(
     db: Session = Depends(get_db)
 ):
     try:
-        # Get attraction and restaurant suggestions
+
         attractions, restaurants = await get_cached_suggestions(
             request.city,
             request.country,
             request.budget
         )
 
-        # Generate itinerary with the suggestions
+        
         itinerary_data = await generate_dynamic_itinerary(
             request.city,
             request.country,
@@ -59,7 +59,7 @@ async def generate_itinerary_endpoint(
             restaurants
         )
 
-        # Create new itinerary object
+        
         new_itinerary = Itinerary(
             city=request.city,
             country=request.country,
@@ -69,13 +69,12 @@ async def generate_itinerary_endpoint(
             preferences=", ".join(request.preferred_activities)
         )
 
-        # Save to database in background
+        
         try:
             db.add(new_itinerary)
             db.commit()
         except SQLAlchemyError:
             db.rollback()
-            # Continue even if database save fails
             pass
 
         return itinerary_data
@@ -102,7 +101,6 @@ async def get_itineraries(db: Session = Depends(get_db)):
     if not itineraries:
         raise HTTPException(status_code=404, detail="No itineraries found")
 
-    # Process preferences
     for itinerary in itineraries:
         itinerary.preferences = itinerary.preferences.split(", ") if itinerary.preferences else []
 
