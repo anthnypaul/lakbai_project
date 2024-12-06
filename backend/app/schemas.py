@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Dict, Any
+# schemas.py
+from pydantic import BaseModel, Field, ConfigDict, EmailStr, constr
+from typing import List, Dict, Any, Optional
+from datetime import datetime
 
 class ItineraryRequest(BaseModel):
     city: str = Field(..., description="The city for the itinerary")
@@ -14,7 +16,27 @@ class ItinerarySchema(BaseModel):
     country: str
     duration: int
     budget: int
-    preferences: List[str]  
+    preferences: List[str]
     description: Dict[str, Any]
+    user_id: int
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+class UserBase(BaseModel):
+    email: EmailStr
+    username: constr
+
+class UserCreate(UserBase):
+    password: constr = Field(..., min_length=8)
+
+class UserResponse(UserBase):
+    id: int
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
