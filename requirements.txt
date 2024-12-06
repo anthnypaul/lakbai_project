@@ -51,10 +51,13 @@ pytest-asyncio==0.24.0
 iniconfig==2.0.0
 pluggy==1.5.0
 
-# Production Tools (Optional)
+# Production Tools
 celery==5.3.0
 gunicorn==21.2.0
 
 # Core Dependencies
 pydantic_core==2.23.4
 sqlparse==0.5.1
+
+# Password Hashing
+passlib[bcrypt]==1.7.4
