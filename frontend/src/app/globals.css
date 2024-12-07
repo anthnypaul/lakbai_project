@@ -88,3 +88,45 @@
 div[role="listbox"] {
   background-color: white !important;
 }
+
+@keyframes wave {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-40px);
+  }
+}
+
+@keyframes wave2 {
+  0% {
+    transform: translateX(-40px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes boatSailing {
+  0%, 100% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  25% {
+    transform: translate(-50%, -60%) rotate(-2deg);
+  }
+  75% {
+    transform: translate(-50%, -40%) rotate(2deg);
+  }
+}
+
+.animate-wave {
+  animation: wave 3s linear infinite;
+}
+
+.animate-wave-2 {
+  animation: wave2 3s linear infinite;
+}
+
+.animate-boat-sailing {
+  animation: boatSailing 3s ease-in-out infinite;
+}

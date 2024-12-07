@@ -95,20 +95,21 @@ async def generate_dynamic_itinerary(city: str, country: str, days: int, budget:
         "2. Include neighborhood/district names in parentheses\n"
         "3. Match restaurant suggestions to the activity locations\n"
         "4. Consider timing (breakfast/brunch spots for morning, etc.)\n"
-        "5. Follow budget level for dining choices\n\n"
-        "Example response format for ONE timeslot:\n"
+        "5. Follow budget level for dining choices\n"
+        "6. Use only double quotes in the JSON response, no single quotes\n\n"
+        "Response format:\n"
         '{\n'
-        '  "morning": {\n'
-        '    "activity": "Pike Place Market (Downtown)",\n'
-        '    "dining": "Biscuit Bitch (Downtown)"\n'
-        '  }\n'
-        '}\n\n'
-        'Complete itinerary format:\n'
-        '{"days": [{"day": 1, "schedule": {\n'
-        '    "morning": {"activity": "...", "dining": "..."},\n'
-        '    "afternoon": {"activity": "...", "dining": "..."},\n'
-        '    "evening": {"activity": "...", "dining": "..."}\n'
-        '}}]}'
+        '  "days": [\n'
+        '    {\n'
+        '      "day": 1,\n'
+        '      "schedule": {\n'
+        '        "morning": {"activity": "Pike Place Market (Downtown)", "dining": "Biscuit Bitch (Downtown)"},\n'
+        '        "afternoon": {"activity": "Activity (Area)", "dining": "Restaurant (Area)"},\n'
+        '        "evening": {"activity": "Activity (Area)", "dining": "Restaurant (Area)"}\n'
+        '      }\n'
+        '    }\n'
+        '  ]\n'
+        '}'
     )
 
     try:
@@ -128,48 +129,35 @@ async def generate_dynamic_itinerary(city: str, country: str, days: int, budget:
         )
         
         content = response.choices[0].message.content.strip()
+        print(f"OpenAI Response: {content}")
         itinerary_data = json.loads(content)
 
-        
         if "days" not in itinerary_data:
             raise ValueError("Missing days in response")
 
-       
-        used_venues = set()
-
+        # Process each day's schedule
         for day in itinerary_data["days"]:
-            schedule = day.get("schedule", {})
+            schedule = day["schedule"]
             for slot in ["morning", "afternoon", "evening"]:
-                slot_data = schedule.get(slot, {})
+                slot_data = schedule[slot]
                 
-                activity = slot_data.get("activity", "")
-                dining = slot_data.get("dining", "")
-
-               
-                if not "(" in activity or not ")" in activity:
-                    activity += f" ({city} Center)"
-                if isinstance(dining, str):
-                    if not "(" in dining or not ")" in dining:
-                        dining += f" ({city} Center)"
+                # Ensure proper formatting for activities and dining
+                for key in ["activity", "dining"]:
+                    value = slot_data[key]
+                    if not isinstance(value, str):
+                        slot_data[key] = str(value)
                     
-                    used_venues.add(dining.split("(")[0].strip().lower())
-                elif isinstance(dining, list):
-                    for dining_item in dining:
-                        if not "(" in dining_item or not ")" in dining_item:
-                            dining_item += f" ({city} Center)"
-                        
-                        used_venues.add(dining_item.split("(")[0].strip().lower())
-
-                    dining = ", ".join(dining)
-
-      
-                slot_data["activity"] = activity
-                slot_data["dining"] = dining
-
-               
-                used_venues.add(activity.split("(")[0].strip().lower())
+                    # Add district if missing
+                    if "(" not in value or ")" not in value:
+                        base_name = value.strip()
+                        if slot == "morning":
+                            district = schedule[slot]["activity"].split("(")[-1].strip(")") if "(" in schedule[slot]["activity"] else f"{city} Center"
+                        else:
+                            district = f"{city} Center"
+                        slot_data[key] = f"{base_name} ({district})"
 
         return itinerary_data
 
     except Exception as e:
+        print(f"Error details: {str(e)}")
         raise RuntimeError(f"Failed to generate itinerary: {str(e)}")
