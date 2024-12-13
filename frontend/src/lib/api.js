@@ -1,4 +1,3 @@
-// lib/api.js
 import axios from 'axios';
 
 const api = axios.create({
@@ -82,7 +81,15 @@ export const generateItinerary = async (formData) => {
         };
 
         const response = await api.post('/itinerary/generate-itinerary/', requestData);
-        return response.data;
+        
+        if (!response.data.id) {
+            console.warn('No itinerary ID in response:', response.data);
+        }
+        
+        return {
+            ...response.data,
+            id: response.data.id 
+        };
     } catch (error) {
         const errorMessage = error.response?.data?.detail || 'Failed to generate itinerary';
         throw new Error(errorMessage);
@@ -92,9 +99,37 @@ export const generateItinerary = async (formData) => {
 export const fetchItineraries = async () => {
     try {
         const response = await api.get('/itinerary/itineraries');
-        return response.data;
+        if (!response.data || !Array.isArray(response.data)) {
+            return [];
+        }
+        const itineraries = response.data.map(itinerary => ({
+            ...itinerary,
+            id: itinerary.id || itinerary.description?.id 
+        }));
+        return itineraries;
     } catch (error) {
-        const errorMessage = error.response?.data?.detail || 'Failed to fetch itineraries';
+        console.warn('Failed to fetch itineraries:', error);
+        return [];
+    }
+};
+
+export const deleteItinerary = async (id) => {
+    if (!id) {
+        throw new Error('Itinerary ID is required');
+    }
+    const numericId = !isNaN(id) ? Number(id) : id;
+    
+    try {
+        const response = await api.delete(`/itinerary/itineraries/${numericId}`);
+        if (response.status === 204 || response.status === 200) {
+            return true;
+        }
+        throw new Error('Failed to delete itinerary');
+    } catch (error) {
+        if (error.response?.status === 404) {
+            throw new Error('Itinerary not found');
+        }
+        const errorMessage = error.response?.data?.detail || 'Failed to delete itinerary';
         throw new Error(errorMessage);
     }
 };

@@ -52,7 +52,7 @@ async def generate_itinerary_endpoint(
         )
         
         new_itinerary = Itinerary(
-            user_id=current_user.id,  # Add user_id
+            user_id=current_user.id,  
             city=request.city,
             country=request.country,
             description=itinerary_data,

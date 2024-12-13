@@ -44,14 +44,10 @@ const ItinerarySection = () => {
             setError('');
             setItinerary(null);
 
-            // Validate form
             validateForm();
-
-            // Generate itinerary
             const result = await generateItinerary(searchState);
             setItinerary(result);
         } catch (err) {
-            // Using optional chaining for safer error handling
             const errorMessage = err?.message || 'An error occurred while planning your trip';
             setError(errorMessage);
         } finally {

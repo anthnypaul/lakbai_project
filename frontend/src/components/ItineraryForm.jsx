@@ -1,18 +1,29 @@
 "use client";
 
+import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Utensils, Coffee, Waves, TreePine, Music, Camera, Building2, ShoppingBag } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2, Utensils, Coffee, Waves, TreePine, Music, Camera, Building2, ShoppingBag, MapPin, Calendar, Wallet } from 'lucide-react';
 
 const budgetOptions = [
-  { value: '$', label: 'Budget' },
-  { value: '$$', label: 'Moderate' },
-  { value: '$$$', label: 'High-End' },
-  { value: '$$$$', label: 'Luxury' }
+  { value: 1, label: '$', description: 'Budget' },
+  { value: 2, label: '$$', description: 'Moderate' },
+  { value: 3, label: '$$$', description: 'Luxury' },
+  { value: 4, label: '$$$$', description: 'Ultra' }
 ];
 
-const daysOptions = Array.from({ length: 7 }, (_, i) => i + 1);
+const daysOptions = [...Array(7)].map((_, i) => ({
+  value: i + 1,
+  label: `${i + 1} ${i === 0 ? 'Day' : 'Days'}`
+}));
 
 const activityOptions = [
   { icon: Utensils, label: 'Dining', value: 'dining' },
@@ -38,118 +49,137 @@ const ItineraryForm = ({ searchState, setSearchState, loading, onSubmit }) => {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Location Section */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4 text-[#333333]">Where do you want to go?</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[#333333]">City</label>
-            <Input
-              placeholder="Enter city"
-              value={searchState.city}
-              onChange={(e) => setSearchState(prev => ({...prev, city: e.target.value}))}
-              className="border-[#E0E0E0] focus:border-[#4DB6AC]"
-            />
+    <Card className="border-2 border-[#66B2AB]/20 bg-white">
+      <CardContent className="p-6 space-y-8">
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <MapPin className="h-5 w-5 text-[#66B2AB]" />
+            <h2 className="text-xl font-semibold text-gray-800">Destination</h2>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[#333333]">Country</label>
-            <Input
-              placeholder="Enter country"
-              value={searchState.country}
-              onChange={(e) => setSearchState(prev => ({...prev, country: e.target.value}))}
-              className="border-[#E0E0E0] focus:border-[#4DB6AC]"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Trip Details Section */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4 text-[#333333]">Trip Details</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[#333333]">Duration</label>
-            <Select
-              value={searchState.days.toString()}
-              onValueChange={(value) => setSearchState(prev => ({...prev, days: parseInt(value)}))}
-            >
-              <SelectTrigger className="w-full border-[#E0E0E0] focus:border-[#4DB6AC]">
-                <SelectValue placeholder="Select number of days" />
-              </SelectTrigger>
-              <SelectContent>
-                {daysOptions.map((day) => (
-                  <SelectItem key={day} value={day.toString()}>
-                    {day} {day === 1 ? 'day' : 'days'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[#333333]">Budget Range</label>
-            <div className="grid grid-cols-4 gap-2">
-              {budgetOptions.map(({ value, label }) => (
-                <Button
-                  key={value}
-                  variant={searchState.budget === value ? "default" : "outline"}
-                  className={`w-full h-full min-h-[2.5rem] ${
-                    searchState.budget === value 
-                      ? 'bg-[#4DB6AC] hover:bg-[#2979FF]' 
-                      : 'border-[#E0E0E0] hover:border-[#4DB6AC] hover:text-[#4DB6AC]'
-                  }`}
-                  onClick={() => setSearchState(prev => ({...prev, budget: value}))}
-                >
-                  <span className="font-mono text-base">{value}</span>
-                </Button>
-              ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Country</label>
+              <Input
+                type="text"
+                placeholder="Where to?"
+                value={searchState.country}
+                onChange={(e) => setSearchState(prev => ({ ...prev, country: e.target.value }))}
+                className="w-full transition-all duration-200 border-gray-200 focus:border-[#66B2AB] focus:ring-[#66B2AB]"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">City</label>
+              <Input
+                type="text"
+                placeholder="Which city?"
+                value={searchState.city}
+                onChange={(e) => setSearchState(prev => ({ ...prev, city: e.target.value }))}
+                className="w-full transition-all duration-200 border-gray-200 focus:border-[#66B2AB] focus:ring-[#66B2AB]"
+              />
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Activities Section */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-[#333333]">Preferred Activities</h2>
-          <span className="text-sm text-[#666666]">Select up to 8</span>
-        </div>
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
-          {activityOptions.map(({ icon: Icon, label, value }) => {
-            const isSelected = searchState.preferred_activities.includes(value);
-            return (
-              <Button
-                key={value}
-                variant={isSelected ? "default" : "outline"}
-                className={`flex flex-col items-center p-3 h-auto aspect-square ${
-                  isSelected 
-                    ? 'bg-[#4DB6AC] hover:bg-[#2979FF]' 
-                    : 'border-[#E0E0E0] hover:border-[#4DB6AC] hover:text-[#4DB6AC]'
-                }`}
-                onClick={() => toggleActivity(value)}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="h-5 w-5 text-[#66B2AB]" />
+            <h2 className="text-xl font-semibold text-gray-800">Trip Details</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-600">Duration</label>
+              <Select
+                value={searchState.days?.toString()}
+                onValueChange={(value) => setSearchState(prev => ({...prev, days: parseInt(value)}))}
               >
-                <Icon className={`h-6 w-6 mb-2 ${isSelected ? 'text-white' : ''}`} />
-                <span className="text-xs text-center line-clamp-1">{label}</span>
-              </Button>
-            );
-          })}
+                <SelectTrigger className="w-full border-gray-200 focus:border-[#66B2AB]">
+                  <SelectValue placeholder="How long?" />
+                </SelectTrigger>
+                <SelectContent>
+                  {daysOptions.map((day) => (
+                    <SelectItem key={day.value} value={day.value.toString()}>
+                      {day.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Wallet className="h-4 w-4 text-[#66B2AB]" />
+                <label className="text-sm font-medium text-gray-600">Budget Level</label>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {budgetOptions.map((option) => {
+                  const isSelected = searchState.budget === option.value;
+                  return (
+                    <Button
+                      key={option.value}
+                      variant={isSelected ? "default" : "outline"}
+                      className={`flex flex-col items-center py-2 h-16 transition-all duration-200 ${
+                        isSelected 
+                          ? 'bg-[#66B2AB] hover:bg-[#5BA39D] text-white' 
+                          : 'border-gray-200 hover:border-[#66B2AB] hover:text-[#66B2AB]'
+                      }`}
+                      onClick={() => setSearchState(prev => ({ ...prev, budget: option.value }))}
+                    >
+                      <span className="text-lg font-semibold">{option.label}</span>
+                      <span className="text-[10px] mt-1">{option.description}</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Submit Button */}
-      <Button 
-        onClick={onSubmit}
-        disabled={loading}
-        className="w-full h-12 text-base font-medium bg-[#4DB6AC] hover:bg-[#2979FF]"
-      >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Planning your trip...
-          </>
-        ) : 'Plan My Trip'}
-      </Button>
-    </div>
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Camera className="h-5 w-5 text-[#66B2AB]" />
+              <h2 className="text-xl font-semibold text-gray-800">Activities</h2>
+            </div>
+            <span className="text-sm text-[#66B2AB] bg-[#66B2AB]/10 px-3 py-1 rounded-full">
+              {searchState.preferred_activities.length}/8 selected
+            </span>
+          </div>
+          <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
+            {activityOptions.map(({ icon: Icon, label, value }) => {
+              const isSelected = searchState.preferred_activities.includes(value);
+              return (
+                <Button
+                  key={value}
+                  variant={isSelected ? "default" : "outline"}
+                  className={`flex flex-col items-center p-2 h-auto aspect-square transition-all duration-200 ${
+                    isSelected 
+                      ? 'bg-[#66B2AB] hover:bg-[#5BA39D] text-white' 
+                      : 'border-gray-200 hover:border-[#66B2AB] hover:text-[#66B2AB] bg-white'
+                  }`}
+                  onClick={() => toggleActivity(value)}
+                >
+                  <Icon className={`h-6 w-6 mb-1 ${isSelected ? 'text-white' : 'text-[#66B2AB]'}`} />
+                  <span className="text-xs text-center line-clamp-1">{label}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+
+        <Button 
+          onClick={onSubmit}
+          disabled={loading}
+          className="w-full h-14 text-lg font-medium bg-[#66B2AB] hover:bg-[#5BA39D] transition-all duration-200
+            shadow-md hover:shadow-lg hover:-translate-y-0.5"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+              Crafting your perfect trip...
+            </>
+          ) : 'Start Planning →'}
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 
